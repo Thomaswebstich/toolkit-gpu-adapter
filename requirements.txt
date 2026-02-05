@@ -18,14 +18,3 @@ boto3
 Pillow
 matplotlib
 yt-dlp
-# New dependencies
-pyFluidSynth
-mido
-pychord
-pydub
-pyFluidSynth
-mido
-pychord
-pydub
-morethemes==0.1.0
-mplcyberpunk==0.3.1

@@ -215,6 +215,12 @@ RUN pip3 install --no-cache-dir --upgrade pip && \
 # Install project requirements
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+# Install audio/music libraries
+RUN pip3 install --no-cache-dir pyFluidSynth mido pychord pydub
+
+# Install visualization libraries
+RUN pip3 install --no-cache-dir matplotlib morethemes==0.1.0 mplcyberpunk==0.3.1
+
 # Install heavy dependencies individually to handle complex build requirements
 # Install opencv-headless first to avoid X11 dependency issues for PySceneDetect
 RUN pip3 install --no-cache-dir opencv-python-headless
