@@ -23,9 +23,9 @@ pyFluidSynth
 mido
 pychord
 pydub
-librosa
-PySceneDetect
-geopandas
-contextily
+pyFluidSynth
+mido
+pychord
+pydub
 morethemes==0.1.0
 mplcyberpunk==0.3.1

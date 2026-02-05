@@ -212,10 +212,17 @@ COPY requirements.txt .
 RUN pip3 install --no-cache-dir --upgrade pip && \
     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
-# Install project requirements (Geopandas requires libgdal-dev installed above)
+# Install project requirements
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Install remaining separate packages
+# Install heavy dependencies individually to handle complex build requirements
+# Install opencv-headless first to avoid X11 dependency issues for PySceneDetect
+RUN pip3 install --no-cache-dir opencv-python-headless
+RUN pip3 install --no-cache-dir PySceneDetect
+RUN pip3 install --no-cache-dir librosa
+RUN pip3 install --no-cache-dir geopandas contextily
+
+# Install OpenAI Whisper
 RUN pip3 install openai-whisper && \
     pip3 install playwright && \
     pip3 install jsonschema 
