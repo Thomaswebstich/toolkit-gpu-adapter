@@ -107,7 +107,9 @@ RUN git clone https://gitlab.com/AOMediaCodec/SVT-AV1.git && \
 
 # Install libvmaf from source (reverting to manual build as apt package is missing)
 RUN git clone https://github.com/Netflix/vmaf.git && \
-    cd vmaf/libvmaf && \
+    cd vmaf && \
+    git checkout v3.0.0 && \
+    cd libvmaf && \
     meson setup build --buildtype release && \
     ninja -C build && \
     ninja -C build install && \
