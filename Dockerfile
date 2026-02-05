@@ -6,14 +6,20 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies, build tools, and libraries
 # Python 3.10 is the default in Ubuntu 22.04
-RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common \
-    && add-apt-repository universe \
-    && apt-get update && apt-get install -y --no-install-recommends \
-    libgtk-3-0 \
+# Install basic build tools and software properties first
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common \
+    wget \
+    curl \
+    git \
     python3-pip \
     python3-dev \
+    && add-apt-repository universe \
+    && apt-get update && rm -rf /var/lib/apt/lists/*
+
+# Install multimedia libraries and other dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
-    wget \
     tar \
     xz-utils \
     fonts-liberation \
@@ -39,10 +45,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends software-proper
     libgnutls28-dev \
     libaom-dev \
     libdav1d-dev \
-    librav1e-dev \
     libzimg-dev \
     libwebp-dev \
-    git \
     pkg-config \
     autoconf \
     automake \
@@ -147,7 +151,6 @@ RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg && \
     --enable-neon \
     --enable-libaom \
     --enable-libdav1d \
-    --enable-librav1e \
     --enable-libsvtav1 \
     --enable-libvmaf \
     --enable-libzimg \
