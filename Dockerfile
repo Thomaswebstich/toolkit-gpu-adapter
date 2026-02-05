@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     python3-pip \
     python3-dev \
+    nasm \
+    ninja-build \
     && add-apt-repository universe \
     && apt-get update && rm -rf /var/lib/apt/lists/*
 
@@ -46,7 +48,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libaom-dev \
     libdav1d-dev \
     libzimg-dev \
-    libvmaf-dev \
     libwebp-dev \
     pkg-config \
     autoconf \
@@ -103,6 +104,15 @@ RUN git clone https://gitlab.com/AOMediaCodec/SVT-AV1.git && \
     make -j$(nproc) && \
     make install && \
     cd ../.. && rm -rf SVT-AV1
+
+# Install libvmaf from source (reverting to manual build as apt package is missing)
+RUN git clone https://github.com/Netflix/vmaf.git && \
+    cd vmaf/libvmaf && \
+    meson setup build --buildtype release && \
+    ninja -C build && \
+    ninja -C build install && \
+    cd ../.. && rm -rf vmaf && \
+    ldconfig
 
 # Manually build and install fdk-aac (since it is not available via apt-get)
 RUN git clone https://github.com/mstorsjo/fdk-aac && \
