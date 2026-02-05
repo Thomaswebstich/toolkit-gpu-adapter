@@ -2,12 +2,10 @@ Flask
 Werkzeug
 requests
 ffmpeg-python
-openai-whisper
 gunicorn
 APScheduler
 srt
 numpy
-torch
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
