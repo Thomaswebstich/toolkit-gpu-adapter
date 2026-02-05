@@ -26,7 +26,7 @@ If you have Docker Desktop installed:
 
 ```bash
 # Replace 'your-username' with your Docker Hub username
-docker build --platform linux/amd64 -t your-username/nca-toolkit-gpu:latest .
+docker build --platform linux/amd64 -t ghcr.io/thomaswebstich/toolkit-gpu-adapter:latest .
 ```
 
 ## 2. Push to Registry
@@ -42,7 +42,7 @@ docker push your-username/nca-toolkit-gpu:latest
 1.  Log in to the [Salad Portal](https://portal.salad.com/).
 2.  Create a new **Container Group**.
 3.  **Configure Image:**
-    *   **Image Source:** `your-username/nca-toolkit-gpu:latest`
+    *   **Image Source:** `ghcr.io/thomaswebstich/toolkit-gpu-adapter:latest`
     *   **Replica Count:** 1 (start with 1 for testing)
 4.  **Resources:**
     *   **CPU:** 2 vCPU (recommended)
