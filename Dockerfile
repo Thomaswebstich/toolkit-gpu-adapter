@@ -73,9 +73,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfluidsynth-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Download SoundFont
+# Download SoundFont (using a reliable mirror)
 RUN mkdir -p /usr/share/sounds/sf2/ && \
-    wget -O /usr/share/sounds/sf2/FluidR3_GM.sf2 https://github.com/member87/fluid-soundfont-gm/raw/master/FluidR3_GM.sf2
+    wget -O /usr/share/sounds/sf2/FluidR3_GM.sf2 https://gitlab.com/musescore/sounds/FluidR3_GM/-/raw/master/FluidR3_GM.sf2
 
 # Create symlinks for python
 RUN ln -s /usr/bin/python3 /usr/bin/python
