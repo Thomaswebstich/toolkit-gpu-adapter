@@ -48,7 +48,9 @@ def execute_python(job_id, data):
     
     try:
         code = data['code']
-        timeout = data.get('timeout', 30)
+        # Use PYTHON_EXECUTE_TIMEOUT env var (default 3600 seconds), allow override from payload
+        default_timeout = int(os.environ.get('PYTHON_EXECUTE_TIMEOUT', 3600))
+        timeout = data.get('timeout', default_timeout)
         
         # Indent user code
         indented_code = textwrap.indent(code, '    ')

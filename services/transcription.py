@@ -19,6 +19,7 @@
 import os
 import whisper
 import srt
+import torch
 from datetime import timedelta
 from whisper.utils import WriteSRT, WriteVTT
 from services.file_management import download_file
@@ -32,6 +33,21 @@ logging.basicConfig(level=logging.INFO)
 # Set the default local storage directory
 STORAGE_PATH = "/tmp/"
 
+# Global variable for the model
+MODEL = None
+
+def get_model():
+    """Lazy load the Whisper model on the best available device."""
+    global MODEL
+    if MODEL is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.info(f"Loading Whisper model on device: {device}")
+        
+        # Load model using the detected device
+        MODEL = whisper.load_model("base", device=device)
+        logger.info("Whisper model loaded successfully")
+    return MODEL
+
 def process_transcription(media_url, output_type, max_chars=56, language=None,):
     """Transcribe media and return the transcript, SRT or ASS file path."""
     logger.info(f"Starting transcription for media URL: {media_url} with output type: {output_type}")
@@ -39,15 +55,15 @@ def process_transcription(media_url, output_type, max_chars=56, language=None,):
     logger.info(f"Downloaded media to local file: {input_filename}")
 
     try:
-        model = whisper.load_model("base")
-        logger.info("Loaded Whisper model")
-
+        model = get_model()
+        
         # result = model.transcribe(input_filename)
         # logger.info("Transcription completed")
 
         if output_type == 'transcript':
             result = model.transcribe(input_filename, language=language)
             output = result['text']
+
             logger.info("Generated transcript output")
         elif output_type in ['srt', 'vtt']:
 

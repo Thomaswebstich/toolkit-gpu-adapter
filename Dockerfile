@@ -1,8 +1,14 @@
-# Base image
-FROM python:3.10-slim
+# Base image with CUDA support
+FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+
+# Avoid interaction during apt install
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies, build tools, and libraries
+# Python 3.10 is the default in Ubuntu 22.04
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip \
+    python3-dev \
     ca-certificates \
     wget \
     tar \
@@ -54,6 +60,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpangoft2-1.0-0 \
     libgtk-3-0 \
     && rm -rf /var/lib/apt/lists/*
+
+# Install fluidsynth and dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fluidsynth \
+    libfluidsynth-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download SoundFont
+RUN mkdir -p /usr/share/sounds/sf2/ && \
+    wget -O /usr/share/sounds/sf2/FluidR3_GM.sf2 https://github.com/member87/fluid-soundfont-gm/raw/master/FluidR3_GM.sf2
+
+# Create symlinks for python
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # Install SRT from source (latest version using cmake)
 RUN git clone https://github.com/Haivision/srt.git && \
@@ -121,33 +140,33 @@ RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg && \
     CFLAGS="-I/usr/include/freetype2" \
     LDFLAGS="-L/usr/lib/x86_64-linux-gnu" \
     ./configure --prefix=/usr/local \
-        --enable-gpl \
-        --enable-pthreads \
-        --enable-neon \
-        --enable-libaom \
-        --enable-libdav1d \
-        --enable-librav1e \
-        --enable-libsvtav1 \
-        --enable-libvmaf \
-        --enable-libzimg \
-        --enable-libx264 \
-        --enable-libx265 \
-        --enable-libvpx \
-        --enable-libwebp \
-        --enable-libmp3lame \
-        --enable-libopus \
-        --enable-libvorbis \
-        --enable-libtheora \
-        --enable-libspeex \
-        --enable-libass \
-        --enable-libfreetype \
-        --enable-libharfbuzz \
-        --enable-fontconfig \
-        --enable-libsrt \
-        --enable-filter=drawtext \
-        --extra-cflags="-I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include" \
-        --extra-ldflags="-L/usr/lib/x86_64-linux-gnu -lfreetype -lfontconfig" \
-        --enable-gnutls \
+    --enable-gpl \
+    --enable-pthreads \
+    --enable-neon \
+    --enable-libaom \
+    --enable-libdav1d \
+    --enable-librav1e \
+    --enable-libsvtav1 \
+    --enable-libvmaf \
+    --enable-libzimg \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-libvpx \
+    --enable-libwebp \
+    --enable-libmp3lame \
+    --enable-libopus \
+    --enable-libvorbis \
+    --enable-libtheora \
+    --enable-libspeex \
+    --enable-libass \
+    --enable-libfreetype \
+    --enable-libharfbuzz \
+    --enable-fontconfig \
+    --enable-libsrt \
+    --enable-filter=drawtext \
+    --extra-cflags="-I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include" \
+    --extra-ldflags="-L/usr/lib/x86_64-linux-gnu -lfreetype -lfontconfig" \
+    --enable-gnutls \
     && make -j$(nproc) && \
     make install && \
     cd .. && rm -rf ffmpeg
@@ -174,11 +193,13 @@ RUN mkdir -p ${WHISPER_CACHE_DIR}
 COPY requirements.txt .
 
 # Install Python dependencies, upgrade pip 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install openai-whisper && \
-    pip install playwright && \
-    pip install jsonschema 
+# Explicitly install torch with CUDA support
+RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 && \
+    pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install openai-whisper && \
+    pip3 install playwright && \
+    pip3 install jsonschema 
 
 # Create the appuser 
 RUN useradd -m appuser 
@@ -189,7 +210,8 @@ RUN chown appuser:appuser /app
 # Important: Switch to the appuser before downloading the model
 USER appuser
 
-RUN python -c "import os; print(os.environ.get('WHISPER_CACHE_DIR')); import whisper; whisper.load_model('base')"
+# Pre-load the base model to populate cache
+RUN python3 -c "import os; print(os.environ.get('WHISPER_CACHE_DIR')); import whisper; whisper.load_model('base')"
 
 # Install Playwright Chromium browser as appuser
 RUN playwright install chromium
@@ -204,7 +226,7 @@ EXPOSE 8080
 ENV PYTHONUNBUFFERED=1
 
 RUN echo '#!/bin/bash\n\
-gunicorn --bind 0.0.0.0:8080 \
+    gunicorn --bind 0.0.0.0:8080 \
     --workers ${GUNICORN_WORKERS:-2} \
     --timeout ${GUNICORN_TIMEOUT:-300} \
     --worker-class sync \
