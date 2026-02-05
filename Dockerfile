@@ -6,7 +6,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies, build tools, and libraries
 # Python 3.10 is the default in Ubuntu 22.04
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common \
+    && add-apt-repository universe \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    libgtk-3-0 \
     python3-pip \
     python3-dev \
     ca-certificates \
@@ -37,7 +40,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libaom-dev \
     libdav1d-dev \
     librav1e-dev \
-    libsvtav1enc-dev \
     libzimg-dev \
     libwebp-dev \
     git \
