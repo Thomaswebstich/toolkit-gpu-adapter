@@ -15,6 +15,7 @@ on:
       - 'services/**'
       - 'routes/**'
       - 'app.py'
+      - '.github/workflows/**'
 
 env:
   REGISTRY: ghcr.io

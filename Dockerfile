@@ -1,4 +1,4 @@
-# Base image with CUDA support
+# Base image with CUDA support (Trigger build: clean disk space)
 FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
 
 # Avoid interaction during apt install
