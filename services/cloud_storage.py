@@ -54,10 +54,10 @@ class S3CompatibleProvider(CloudStorageProvider):
     def __init__(self):
 
         self.endpoint_url = os.getenv('S3_ENDPOINT_URL')
-        self.access_key = os.getenv('S3_ACCESS_KEY')
-        self.secret_key = os.getenv('S3_SECRET_KEY')
+        self.access_key = os.getenv('S3_ACCESS_KEY') or os.getenv('AWS_ACCESS_KEY_ID')
+        self.secret_key = os.getenv('S3_SECRET_KEY') or os.getenv('AWS_SECRET_ACCESS_KEY')
         self.bucket_name = os.environ.get('S3_BUCKET_NAME', '')
-        self.region = os.environ.get('S3_REGION', '')
+        self.region = os.getenv('S3_REGION') or os.getenv('S3_REGION_NAME') or os.getenv('AWS_DEFAULT_REGION') or ''
         
         # Check if endpoint is Digital Ocean and bucket name or region is missing
         if (self.endpoint_url and 

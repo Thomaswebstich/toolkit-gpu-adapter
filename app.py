@@ -333,6 +333,11 @@ def create_app():
 
     app.queue_task = queue_task
 
+    # Simple health check endpoint for Salad Cloud
+    @app.route('/health')
+    def health():
+        return jsonify({"status": "healthy", "build": BUILD_NUMBER}), 200
+
     # Register special route for Next.js root asset paths first
     from routes.v1.media.feedback import create_root_next_routes
     create_root_next_routes(app)
@@ -345,4 +350,4 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='::', port=8080)

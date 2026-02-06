@@ -19,10 +19,10 @@
 import os
 import logging
 
-# Retrieve the API key from environment variables
+# Retrieve the API key from environment variables (make optional for better debugging on Salad)
 API_KEY = os.environ.get('API_KEY')
 if not API_KEY:
-    raise ValueError("API_KEY environment variable is not set")
+    logging.warning("⚠️ API_KEY environment variable is not set. Authentication will fail.")
 
 # Storage path setting
 LOCAL_STORAGE_PATH = os.environ.get('LOCAL_STORAGE_PATH', '/tmp')
@@ -32,14 +32,24 @@ GCP_SA_CREDENTIALS = os.environ.get('GCP_SA_CREDENTIALS', '')
 GCP_BUCKET_NAME = os.environ.get('GCP_BUCKET_NAME', '')
 
 def validate_env_vars(provider):
-
     """ Validate the necessary environment variables for the selected storage provider """
     required_vars = {
         'GCP': ['GCP_BUCKET_NAME', 'GCP_SA_CREDENTIALS'],
-        'S3': ['S3_ENDPOINT_URL', 'S3_ACCESS_KEY', 'S3_SECRET_KEY', 'S3_BUCKET_NAME', 'S3_REGION'],
-        'S3_DO': ['S3_ENDPOINT_URL', 'S3_ACCESS_KEY', 'S3_SECRET_KEY']
+        'S3': ['S3_ENDPOINT_URL', 'S3_BUCKET_NAME'],
+        'S3_DO': ['S3_ENDPOINT_URL']
     }
     
+    # Accept both S3_ and AWS_ prefixes for keys
+    s3_access = os.getenv('S3_ACCESS_KEY') or os.getenv('AWS_ACCESS_KEY_ID')
+    s3_secret = os.getenv('S3_SECRET_KEY') or os.getenv('AWS_SECRET_ACCESS_KEY')
+    s3_region = os.getenv('S3_REGION') or os.getenv('S3_REGION_NAME') or os.getenv('AWS_DEFAULT_REGION')
+
     missing_vars = [var for var in required_vars[provider] if not os.getenv(var)]
+    
+    if provider in ['S3', 'S3_DO']:
+        if not s3_access: missing_vars.append('S3_ACCESS_KEY / AWS_ACCESS_KEY_ID')
+        if not s3_secret: missing_vars.append('S3_SECRET_KEY / AWS_SECRET_ACCESS_KEY')
+
     if missing_vars:
-        raise ValueError(f"Missing environment variables for {provider} storage: {', '.join(missing_vars)}")
+        logging.error(f"❌ Missing environment variables for {provider} storage: {', '.join(missing_vars)}")
+        # We don't raise ValueError here to allow the server to start and show logs
