@@ -209,25 +209,16 @@ COPY requirements.txt .
 
 # Install Python dependencies, upgrade pip 
 # Explicitly install torch with CUDA support
-RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-
 # Install Core Python Dependencies (Build tools)
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install Base Libraries (often dependencies for others)
+# Install Base Libraries
 RUN pip3 install --no-cache-dir numpy cryptography cffi certifi six
 
-# Check disk space before installing Flask
-RUN df -h
-
-# Check disk space after torch install
-RUN df -h
-
-# Install Web Frameworks dependencies explicitly using binary wheels (avoid compilation)
-RUN pip3 install --no-cache-dir --only-binary=:all: MarkupSafe==2.1.3 Jinja2==3.1.2 click==8.1.7 blinker==1.6.2 itsdangerous==2.1.2
-# Install Flask (binary only)
-RUN pip3 install --no-cache-dir --only-binary=:all: Flask==2.3.3
+# Install Web Frameworks (Install BEFORE PyTorch to ensure they fit)
+RUN pip3 install --no-cache-dir requests==2.31.0
+RUN pip3 install --no-cache-dir Werkzeug==2.3.8
+RUN pip3 install --no-cache-dir Flask==2.3.3
 RUN pip3 install --no-cache-dir gunicorn==20.1.0
 
 # Install Google Cloud SDKs
@@ -235,6 +226,10 @@ RUN pip3 install --no-cache-dir google-auth google-auth-oauthlib google-auth-htt
 
 # Install Utilities
 RUN pip3 install --no-cache-dir APScheduler srt psutil boto3 yt-dlp
+
+# Install PyTorch (The largest dependency - clean cache immediately)
+RUN pip3 install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 && \
+    rm -rf /root/.cache/pip
 
 # Install Image/Video Libraries
 RUN pip3 install --no-cache-dir Pillow matplotlib ffmpeg-python
