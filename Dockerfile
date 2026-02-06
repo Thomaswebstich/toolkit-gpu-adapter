@@ -221,14 +221,11 @@ RUN pip3 install --no-cache-dir numpy cryptography cffi certifi six
 # Check disk space before installing Flask
 RUN df -h
 
-# Install Web Frameworks (Pinned versions for stability)
-RUN pip3 install --no-cache-dir requests==2.32.3
-RUN pip3 install --no-cache-dir Werkzeug==3.0.3
-RUN pip3 install --no-cache-dir gunicorn==22.0.0
-
-# Install Flask and dependencies explicitly with verbose output to debug failure
-RUN pip3 install --no-cache-dir -v blinker==1.7.0
-RUN pip3 install --no-cache-dir -v Flask==3.0.3
+# Install Web Frameworks (Use Flask 2.x for better compatibility/stability)
+RUN pip3 install --no-cache-dir requests==2.31.0
+RUN pip3 install --no-cache-dir Werkzeug==2.3.8
+RUN pip3 install --no-cache-dir Flask==2.3.3
+RUN pip3 install --no-cache-dir gunicorn==20.1.0
 
 # Install Google Cloud SDKs
 RUN pip3 install --no-cache-dir google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client google-api-core google-cloud-storage google-cloud-run
