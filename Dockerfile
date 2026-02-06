@@ -221,10 +221,13 @@ RUN pip3 install --no-cache-dir numpy cryptography cffi certifi six
 # Check disk space before installing Flask
 RUN df -h
 
-# Install Web Frameworks (Use Flask 2.x for better compatibility/stability)
-RUN pip3 install --no-cache-dir requests==2.31.0
-RUN pip3 install --no-cache-dir Werkzeug==2.3.8
-RUN pip3 install --no-cache-dir Flask==2.3.3
+# Check disk space after torch install
+RUN df -h
+
+# Install Web Frameworks dependencies explicitly using binary wheels (avoid compilation)
+RUN pip3 install --no-cache-dir --only-binary=:all: MarkupSafe==2.1.3 Jinja2==3.1.2 click==8.1.7 blinker==1.6.2 itsdangerous==2.1.2
+# Install Flask (binary only)
+RUN pip3 install --no-cache-dir --only-binary=:all: Flask==2.3.3
 RUN pip3 install --no-cache-dir gunicorn==20.1.0
 
 # Install Google Cloud SDKs
