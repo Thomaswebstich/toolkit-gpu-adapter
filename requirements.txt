@@ -1,15 +1,2 @@
-Flask
-Werkzeug
-requests
-gunicorn
-APScheduler
-srt
-google-auth
-google-auth-oauthlib
-google-auth-httplib2
-google-api-python-client
-google-api-core
-google-cloud-storage
-google-cloud-run
-boto3
-yt-dlp
+# All requirements are now installed via Dockerfile for better build isolation
+# keeping this file empty but present.

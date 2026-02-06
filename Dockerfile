@@ -212,14 +212,23 @@ COPY requirements.txt .
 RUN pip3 install --no-cache-dir --upgrade pip && \
     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
-# Install project requirements (Safe pure-python libs)
-RUN pip3 install --no-cache-dir -r requirements.txt
+# Install Core Python Dependencies (Build tools)
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install numpy explicitly (ensure compatibility with torch if possible, or just let pip handle)
-RUN pip3 install --no-cache-dir numpy
+# Install Base Libraries (often dependencies for others)
+RUN pip3 install --no-cache-dir numpy cryptography cffi certifi six
 
-# Install compiled/binary dependencies
-RUN pip3 install --no-cache-dir psutil Pillow matplotlib ffmpeg-python
+# Install Web Frameworks
+RUN pip3 install --no-cache-dir Flask Werkzeug gunicorn requests
+
+# Install Google Cloud SDKs
+RUN pip3 install --no-cache-dir google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client google-api-core google-cloud-storage google-cloud-run
+
+# Install Utilities
+RUN pip3 install --no-cache-dir APScheduler srt psutil boto3 yt-dlp
+
+# Install Image/Video Libraries
+RUN pip3 install --no-cache-dir Pillow matplotlib ffmpeg-python
 
 # Install audio/music libraries
 RUN pip3 install --no-cache-dir pyFluidSynth mido pychord pydub
