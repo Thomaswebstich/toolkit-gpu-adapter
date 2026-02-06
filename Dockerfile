@@ -1,246 +1,112 @@
-# Base image with CUDA support (Trigger build: clean disk space)
-FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+# ========== STAGE 1: Builder ==========
+FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04 AS builder
 
-# Avoid interaction during apt install
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies, build tools, and libraries
-# Python 3.10 is the default in Ubuntu 22.04
-# Install basic build tools and software properties first
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    software-properties-common \
-    wget \
-    curl \
-    git \
-    python3-pip \
-    python3-dev \
-    nasm \
-    ninja-build \
-    && add-apt-repository universe \
-    && apt-get update && rm -rf /var/lib/apt/lists/*
-
-# Install multimedia libraries and other dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    tar \
-    xz-utils \
-    fonts-liberation \
-    fontconfig \
-    build-essential \
-    yasm \
-    cmake \
-    meson \
-    ninja-build \
-    nasm \
-    libssl-dev \
-    libvpx-dev \
-    libx264-dev \
-    libx265-dev \
-    libnuma-dev \
-    libmp3lame-dev \
-    libopus-dev \
-    libvorbis-dev \
-    libtheora-dev \
-    libspeex-dev \
-    libfreetype6-dev \
-    libfontconfig1-dev \
-    libgnutls28-dev \
-    libaom-dev \
-    libdav1d-dev \
-    libzimg-dev \
-    libwebp-dev \
-    pkg-config \
-    autoconf \
-    automake \
-    libtool \
-    libfribidi-dev \
-    libharfbuzz-dev \
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libxcomposite1 \
-    libxrandr2 \
-    libxdamage1 \
-    libgbm1 \
-    libasound2 \
-    libpangocairo-1.0-0 \
-    libpangoft2-1.0-0 \
-    libgtk-3-0 \
-    libgdal-dev \
-    libsndfile1 \
+    software-properties-common wget curl git nasm ninja-build build-essential yasm cmake meson \
+    libssl-dev libvpx-dev libx264-dev libx265-dev libnuma-dev libmp3lame-dev libopus-dev \
+    libvorbis-dev libtheora-dev libspeex-dev libfreetype6-dev libfontconfig1-dev libgnutls28-dev \
+    libaom-dev libdav1d-dev libzimg-dev libwebp-dev pkg-config autoconf automake libtool \
+    libfribidi-dev libharfbuzz-dev libunibreak-dev libfluidsynth-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install fluidsynth and dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    fluidsynth \
-    libfluidsynth-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install SoundFont via apt-get (more reliable than wget)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    fluid-soundfont-gm \
-    && rm -rf /var/lib/apt/lists/*
-
-# Symlink for standard location if needed, though fluid-soundfont-gm usually places it correctly
-RUN ln -sf /usr/share/sounds/sf2/FluidR3_GM.sf2 /usr/share/sounds/sf2/default.sf2
-
-# Create symlinks for python
-RUN ln -s /usr/bin/python3 /usr/bin/python
-
-# Install SRT from source (latest version using cmake)
+# Install SRT from source
 RUN git clone https://github.com/Haivision/srt.git && \
-    cd srt && \
-    mkdir build && cd build && \
-    cmake .. && \
-    make -j$(nproc) && \
-    make install && \
+    cd srt && mkdir build && cd build && cmake .. && make -j$(nproc) && make install && \
     cd ../.. && rm -rf srt
 
 # Install SVT-AV1 from source
 RUN git clone https://gitlab.com/AOMediaCodec/SVT-AV1.git && \
-    cd SVT-AV1 && \
-    git checkout v0.9.0 && \
-    cd Build && \
-    cmake .. && \
-    make -j$(nproc) && \
-    make install && \
+    cd SVT-AV1 && git checkout v0.9.0 && cd Build && cmake .. && make -j$(nproc) && make install && \
     cd ../.. && rm -rf SVT-AV1
 
-# Install libvmaf from source (reverting to manual build as apt package is missing)
+# Install libvmaf from source 
 RUN git clone https://github.com/Netflix/vmaf.git && \
-    cd vmaf && \
-    git checkout v3.0.0 && \
-    cd libvmaf && \
-    meson setup build --buildtype release && \
-    ninja -C build && \
-    ninja -C build install && \
-    cd ../.. && rm -rf vmaf && \
-    ldconfig
+    cd vmaf && git checkout v3.0.0 && cd libvmaf && meson setup build --buildtype release && \
+    ninja -C build && ninja -C build install && \
+    cd ../.. && rm -rf vmaf
 
-# Manually build and install fdk-aac (since it is not available via apt-get)
+# Install fdk-aac
 RUN git clone https://github.com/mstorsjo/fdk-aac && \
-    cd fdk-aac && \
-    autoreconf -fiv && \
-    ./configure && \
-    make -j$(nproc) && \
-    make install && \
+    cd fdk-aac && autoreconf -fiv && ./configure && make -j$(nproc) && make install && \
     cd .. && rm -rf fdk-aac
 
-# Install libunibreak (required for ASS_FEATURE_WRAP_UNICODE)
+# Install libunibreak
 RUN git clone https://github.com/adah1972/libunibreak.git && \
-    cd libunibreak && \
-    ./autogen.sh && \
-    ./configure && \
-    make -j$(nproc) && \
-    make install && \
-    ldconfig && \
+    cd libunibreak && ./autogen.sh && ./configure && make -j$(nproc) && make install && \
     cd .. && rm -rf libunibreak
 
-# Build and install libass with libunibreak support and ASS_FEATURE_WRAP_UNICODE enabled
+# Build libass
 RUN git clone https://github.com/libass/libass.git && \
-    cd libass && \
-    autoreconf -i && \
-    ./configure --enable-libunibreak || { cat config.log; exit 1; } && \
-    mkdir -p /app && echo "Config log located at: /app/config.log" && cp config.log /app/config.log && \
-    make -j$(nproc) || { echo "Libass build failed"; exit 1; } && \
-    make install && \
-    ldconfig && \
+    cd libass && autoreconf -i && ./configure --enable-libunibreak && \
+    make -j$(nproc) && make install && \
     cd .. && rm -rf libass
 
-# Build and install FFmpeg with all required features
+# Build FFmpeg
 RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg && \
-    cd ffmpeg && \
-    git checkout n7.0.2 && \
-    PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig" \
-    CFLAGS="-I/usr/include/freetype2" \
-    LDFLAGS="-L/usr/lib/x86_64-linux-gnu" \
-    ./configure --prefix=/usr/local \
-    --enable-gpl \
-    --enable-pthreads \
-    --enable-neon \
-    --enable-libaom \
-    --enable-libdav1d \
-    --enable-libsvtav1 \
-    --enable-libvmaf \
-    --enable-libzimg \
-    --enable-libx264 \
-    --enable-libx265 \
-    --enable-libvpx \
-    --enable-libwebp \
-    --enable-libmp3lame \
-    --enable-libopus \
-    --enable-libvorbis \
-    --enable-libtheora \
-    --enable-libspeex \
-    --enable-libass \
-    --enable-libfreetype \
-    --enable-libharfbuzz \
-    --enable-fontconfig \
-    --enable-libsrt \
-    --enable-filter=drawtext \
-    --extra-cflags="-I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include" \
-    --extra-ldflags="-L/usr/lib/x86_64-linux-gnu -lfreetype -lfontconfig" \
-    --enable-gnutls \
-    && make -j$(nproc) && \
-    make install && \
+    cd ffmpeg && git checkout n7.0.2 && \
+    PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
+    ./configure --prefix=/usr/local --enable-gpl --enable-nonfree --enable-pthreads --enable-libaom \
+    --enable-libdav1d --enable-libsvtav1 --enable-libvmaf --enable-libzimg --enable-libx264 \
+    --enable-libx265 --enable-libvpx --enable-libwebp --enable-libmp3lame --enable-libopus \
+    --enable-libvorbis --enable-libtheora --enable-libspeex --enable-libass --enable-libfreetype \
+    --enable-libharfbuzz --enable-fontconfig --enable-libsrt --enable-gnutls \
+    && make -j$(nproc) && make install && \
     cd .. && rm -rf ffmpeg
 
-# Add /usr/local/bin to PATH (if not already included)
+# ========== STAGE 2: Final ==========
+FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV WHISPER_CACHE_DIR="/app/whisper_cache"
 ENV PATH="/usr/local/bin:${PATH}"
 
-# Copy fonts into the custom fonts directory
-COPY ./fonts /usr/share/fonts/custom
-
-# Rebuild the font cache so that fontconfig can see the custom fonts
-RUN fc-cache -f -v
-
-# Set work directory
 WORKDIR /app
 
-# Set environment variable for Whisper cache
-ENV WHISPER_CACHE_DIR="/app/whisper_cache"
+# Copy compiled binaries and libraries from builder
+COPY --from=builder /usr/local /usr/local
+RUN ldconfig
 
-# Create cache directory (no need for chown here yet)
-RUN mkdir -p ${WHISPER_CACHE_DIR} 
+# Install runtime dependencies and Python
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip python3-dev libssl3 wget curl git fonts-liberation fontconfig \
+    libvpx7 libx264-163 libx265-199 libnuma1 libmp3lame0 libopus0 libvorbis0a libvorbisenc2 \
+    libtheora0 libspeex1 libfreetype6 libfontconfig1 libgnutls30 libaom3 libdav1d5 \
+    libwebpmux3 libwebp7 libfribidi0 libharfbuzz0b fluidsynth fluid-soundfont-gm \
+    libgdal-dev libsndfile1 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+    libxcomposite1 libxrandr2 libxdamage1 libgbm1 libasound2 libpangocairo-1.0-0 \
+    libpangoft2-1.0-0 libgtk-3-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file first to optimize caching
+# Symlink python
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+# Rebuild font cache
+COPY ./fonts /usr/share/fonts/custom
+RUN fc-cache -f -v && ln -sf /usr/share/sounds/sf2/FluidR3_GM.sf2 /usr/share/sounds/sf2/default.sf2
+
+# Install Python dependencies
 COPY requirements.txt .
-
-# Install Core Python Dependencies and upgrade pip
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
-
-# Install all dependencies from requirements.txt
-# We do this in one step to ensure consistent dependency resolution
-RUN pip3 install --no-cache-dir -r requirements.txt
-
-# Install PyTorch with CUDA support (Large dependency, installed separately for caching)
-RUN pip3 install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 && \
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 && \
     rm -rf /root/.cache/pip
 
-# Create the appuser 
-RUN useradd -m appuser 
-
-# Give appuser ownership of the /app directory (including whisper_cache)
-RUN chown appuser:appuser /app 
-
-# Important: Switch to the appuser before downloading the model
+# Set up user
+RUN useradd -m appuser && mkdir -p ${WHISPER_CACHE_DIR} && chown -R appuser:appuser /app
 USER appuser
 
-# Pre-load the base model to populate cache
-RUN python3 -c "import os; print(os.environ.get('WHISPER_CACHE_DIR')); import whisper; whisper.load_model('base')"
+# Pre-load model and install playwright
+RUN python3 -c "import whisper; whisper.load_model('base')" && \
+    playwright install chromium
 
-# Install Playwright Chromium browser as appuser
-RUN playwright install chromium
-
-# Copy the rest of the application code
+# Copy application
 COPY . .
 
-# Expose the port the app runs on
 EXPOSE 8080
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
 
 RUN echo '#!/bin/bash\n\
     gunicorn --bind 0.0.0.0:8080 \
@@ -252,5 +118,4 @@ RUN echo '#!/bin/bash\n\
     app:app' > /app/run_gunicorn.sh && \
     chmod +x /app/run_gunicorn.sh
 
-# Run the shell script
 CMD ["/app/run_gunicorn.sh"]
