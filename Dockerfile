@@ -218,8 +218,11 @@ RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 # Install Base Libraries (often dependencies for others)
 RUN pip3 install --no-cache-dir numpy cryptography cffi certifi six
 
-# Install Web Frameworks
-RUN pip3 install --no-cache-dir Flask Werkzeug gunicorn requests
+# Install Web Frameworks (Split for debugging)
+RUN pip3 install --no-cache-dir requests
+RUN pip3 install --no-cache-dir Werkzeug
+RUN pip3 install --no-cache-dir Flask
+RUN pip3 install --no-cache-dir gunicorn
 
 # Install Google Cloud SDKs
 RUN pip3 install --no-cache-dir google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client google-api-core google-cloud-storage google-cloud-run
