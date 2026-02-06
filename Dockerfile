@@ -221,6 +221,12 @@ RUN pip3 install --no-cache-dir numpy cryptography cffi certifi six
 # Install Web Frameworks (Split for debugging)
 RUN pip3 install --no-cache-dir requests
 RUN pip3 install --no-cache-dir Werkzeug
+# Install Flask dependencies explicitly to debug
+RUN pip3 install --no-cache-dir MarkupSafe
+RUN pip3 install --no-cache-dir Jinja2
+RUN pip3 install --no-cache-dir click
+RUN pip3 install --no-cache-dir blinker
+RUN pip3 install --no-cache-dir itsdangerous
 RUN pip3 install --no-cache-dir Flask
 RUN pip3 install --no-cache-dir gunicorn
 
