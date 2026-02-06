@@ -212,8 +212,14 @@ COPY requirements.txt .
 RUN pip3 install --no-cache-dir --upgrade pip && \
     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
-# Install project requirements
+# Install project requirements (Safe pure-python libs)
 RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Install numpy explicitly (ensure compatibility with torch if possible, or just let pip handle)
+RUN pip3 install --no-cache-dir numpy
+
+# Install compiled/binary dependencies
+RUN pip3 install --no-cache-dir psutil Pillow matplotlib ffmpeg-python
 
 # Install audio/music libraries
 RUN pip3 install --no-cache-dir pyFluidSynth mido pychord pydub
