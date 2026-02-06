@@ -27,7 +27,7 @@ mido
 pychord
 pydub
 morethemes==0.1.0
-mplcyberpunk==0.3.1
+mplcyberpunk>=0.3.0
 opencv-python-headless
 PySceneDetect
 librosa
