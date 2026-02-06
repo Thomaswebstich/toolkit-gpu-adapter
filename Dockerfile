@@ -207,50 +207,16 @@ RUN mkdir -p ${WHISPER_CACHE_DIR}
 # Copy the requirements file first to optimize caching
 COPY requirements.txt .
 
-# Install Python dependencies, upgrade pip 
-# Explicitly install torch with CUDA support
-# Install Core Python Dependencies (Build tools)
+# Install Core Python Dependencies and upgrade pip
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install Base Libraries
-RUN pip3 install --no-cache-dir numpy cryptography cffi certifi six
+# Install all dependencies from requirements.txt
+# We do this in one step to ensure consistent dependency resolution
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Install Web Frameworks (Install BEFORE PyTorch to ensure they fit)
-RUN pip3 install --no-cache-dir requests==2.31.0
-RUN pip3 install --no-cache-dir Werkzeug==2.3.8
-RUN pip3 install --no-cache-dir Flask==2.3.3
-RUN pip3 install --no-cache-dir gunicorn==20.1.0
-
-# Install Google Cloud SDKs
-RUN pip3 install --no-cache-dir google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client google-api-core google-cloud-storage google-cloud-run
-
-# Install Utilities
-RUN pip3 install --no-cache-dir APScheduler srt psutil boto3 yt-dlp
-
-# Install PyTorch (The largest dependency - clean cache immediately)
+# Install PyTorch with CUDA support (Large dependency, installed separately for caching)
 RUN pip3 install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 && \
     rm -rf /root/.cache/pip
-
-# Install Image/Video Libraries
-RUN pip3 install --no-cache-dir Pillow matplotlib ffmpeg-python
-
-# Install audio/music libraries
-RUN pip3 install --no-cache-dir pyFluidSynth mido pychord pydub
-
-# Install visualization libraries
-RUN pip3 install --no-cache-dir matplotlib morethemes==0.1.0 mplcyberpunk==0.3.1
-
-# Install heavy dependencies individually to handle complex build requirements
-# Install opencv-headless first to avoid X11 dependency issues for PySceneDetect
-RUN pip3 install --no-cache-dir opencv-python-headless
-RUN pip3 install --no-cache-dir PySceneDetect
-RUN pip3 install --no-cache-dir librosa
-RUN pip3 install --no-cache-dir geopandas contextily
-
-# Install OpenAI Whisper
-RUN pip3 install openai-whisper && \
-    pip3 install playwright && \
-    pip3 install jsonschema 
 
 # Create the appuser 
 RUN useradd -m appuser 

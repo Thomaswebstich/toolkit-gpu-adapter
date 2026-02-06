@@ -17,7 +17,7 @@ Since your local machine might not support Docker Desktop, use GitHub Actions to
 2.  Go to the **Actions** tab in your repository.
 3.  Select **Build and Push Docker Image**.
 4.  Click **Run workflow**.
-5.  Once complete, your image will be available at `ghcr.io/your-github-username/no-code-architects-toolkit:latest`.
+5.  Once complete, your image will be available at `ghcr.io/thomaswebstich/toolkit-gpu-adapter:latest`.
 
 **Note:** You will need to make the package "Public" in your GitHub Package settings if you want Salad to pull it without authentication, or provide Salad with a Personal Access Token (PAT).
 
@@ -34,7 +34,7 @@ docker build --platform linux/amd64 -t ghcr.io/thomaswebstich/toolkit-gpu-adapte
 Push the built image to your public or private registry.
 
 ```bash
-docker push your-username/nca-toolkit-gpu:latest
+docker push ghcr.io/thomaswebstich/toolkit-gpu-adapter:latest
 ```
 
 ## 3. Deploy on Salad Cloud
