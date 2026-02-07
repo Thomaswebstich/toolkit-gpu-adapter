@@ -109,7 +109,7 @@ COPY . .
 EXPOSE 8080
 
 RUN echo '#!/bin/bash\n\
-    gunicorn --bind 0.0.0.0:8080 \
+    gunicorn --bind [::]:8080 \
     --workers ${GUNICORN_WORKERS:-2} \
     --timeout ${GUNICORN_TIMEOUT:-300} \
     --worker-class sync \
