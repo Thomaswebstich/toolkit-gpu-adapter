@@ -81,7 +81,7 @@ RUN git clone https://gitlab.com/AOMediaCodec/SVT-AV1.git && \
 # Install libvmaf from source
 RUN git clone https://github.com/Netflix/vmaf.git && \
     cd vmaf/libvmaf && \
-    meson build --buildtype release -Dtests=false && \
+    LDFLAGS="-lstdc++" meson build --buildtype release -Denable_tests=false && \
     ninja -C build && \
     ninja -C build install && \
     cd ../.. && rm -rf vmaf && \
@@ -138,7 +138,6 @@ RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg && \
     --enable-neon \
     --enable-libaom \
     --enable-libdav1d \
-    --enable-librav1e \
     --enable-libsvtav1 \
     --enable-libvmaf \
     --enable-libzimg \
@@ -158,7 +157,7 @@ RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg && \
     --enable-libsrt \
     --enable-filter=drawtext \
     --extra-cflags="-I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include" \
-    --extra-ldflags="-L/usr/lib/x86_64-linux-gnu -lfreetype -lfontconfig" \
+    --extra-ldflags="-L/usr/lib/x86_64-linux-gnu -lfreetype -lfontconfig -lstdc++" \
     --enable-gnutls \
     --enable-cuda-nvcc \
     --enable-libnpp \
