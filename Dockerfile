@@ -81,7 +81,7 @@ RUN git clone https://gitlab.com/AOMediaCodec/SVT-AV1.git && \
 # Install libvmaf from source
 RUN git clone https://github.com/Netflix/vmaf.git && \
     cd vmaf/libvmaf && \
-    meson build --buildtype release && \
+    meson build --buildtype release -Dtests=false && \
     ninja -C build && \
     ninja -C build install && \
     cd ../.. && rm -rf vmaf && \
