@@ -35,8 +35,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgnutls28-dev \
     libaom-dev \
     libdav1d-dev \
-    librav1e-dev \
-    libsvtav1enc-dev \
     libzimg-dev \
     libwebp-dev \
     git \
